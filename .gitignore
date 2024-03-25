@@ -1,0 +1,5 @@
+# ignore the vir env
+venv/
+
+# ignote the __pycache__ files
+__pycache__/
