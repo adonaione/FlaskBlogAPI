@@ -3,3 +3,6 @@ venv/
 
 # ignote the __pycache__ files
 __pycache__/
+
+# ignor the .env file because that conatins environment secrets
+.env 
