@@ -1,13 +1,59 @@
-from flask import request
+from flask import request, render_template
 from . import app
 from fake_data.posts import post_data
+
+# Will set up db later, for now we will store all Users in this users list
+users = []
 
 # Define a route
 @app.route("/")
 def index():
-    first_name = 'Adonai'
-    age = 26
-    return 'Hello ' + first_name + ' who is ' + str(age) + ' years old'
+    return render_template('index.html')
+
+# User Endpoints
+
+# Create New User
+@app.route('/users', methods=['POST'])
+def create_user():
+    # Check to make sure that the request body is JSON
+    if not request.is_json:
+        return {'error': 'Your content-type must be application/json'}, 400
+    # Get the data from the request body
+    data = request.json
+
+    # Validate that the data has all of the required fields
+    required_fields = ['firstName', 'lastName', 'username', 'email', 'password']
+    missing_fields = []
+    for field in required_fields:
+        if field not in data:
+            missing_fields.append(field)
+    if missing_fields:
+        return {'error': f"{', '.join(missing_fields)} must be in the request body"}, 400
+
+    # Pull the individual data from the body
+    first_name = data.get('firstName')
+    last_name = data.get('lastName')
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    # check to see if any current users already have that username and/or email
+    for user in users: 
+        if user['username'] == username or user['email'] == email:
+            return {'error': 'A user with that username and/or email already exists'}, 400
+        
+    # create a new instance od a iser with the data from the request
+    new_user = {
+        "id": len(users) + 1,
+        "firstName": first_name,
+        "lastName": last_name,
+        "username": username,
+        "email": email,
+        "password": password
+    }
+    users.append(new_user)
+
+    return new_user, 201
 
 
 # Post Endpoints
@@ -34,41 +80,44 @@ def get_post(post_id):
     # If we loop through all of the posts without returning, the post with that ID does not exist
     return {'error': f"Post with an ID of {post_id} does not exist"}, 404
 
-#creatae a post
+
+# Create a Post
 @app.route('/posts', methods=['POST'])
 def create_post():
-    # check to see if the request body is JSON
+    # Check to see if the request body is JSON
     if not request.is_json:
-        return {'error': 'Your content-type must be application/json'}
-    # get the data from the request body
+        return {'error': 'Your content-type must be application/json'}, 400
+    # Get the data from the request body
     data = request.json
-    # validate the incoming data
+    # Validate the incoming data
     required_fields = ['title', 'body']
     missing_fields = []
+    # For each of the required fields
     for field in required_fields:
-        #if the firld is not in the request body dict
+        # If the field is not in the request body dictionary
         if field not in data:
-            # add that dield to the list of missing fields
+            # Add that field to the list of missing fields
             missing_fields.append(field)
-    # if there are any missing fields, return 400 status code with the missing_fields listed
+    # If there are any missing fields, return 400 status code with the missing fields listed
     if missing_fields:
         return {'error': f"{', '.join(missing_fields)} must be in the request body"}, 400
-    # get data values
+    
+    # Get data values
     title = data.get('title')
     body = data.get('body')
 
-    #create a new post dict with data
+    # Create a new post dictionary with data
     new_post = {
         'id': len(post_data) + 1,
         'title': title,
         'body': body,
         'userId': 1,
-        'dateCreated': '2024=03-25T15:21:35',
+        'dateCreated': '2024-03-25T15:21:35',
         'likes': 0
     }
 
-    # add new post to storage (post_data -> will be db tomorrow)
+    # Add the new post to storage (post_data -> will be db tomorrow)
     post_data.append(new_post)
 
-    #return the newly created post dictionary with a 201 Created Status Code
-    return 'This is the create post route :)'
+    # Return the newly created post dictionary with a 201 Created Status Code
+    return new_post, 201
