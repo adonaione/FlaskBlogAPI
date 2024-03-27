@@ -1,5 +1,6 @@
 from flask import request, render_template
-from . import app
+from . import app, db
+from .models import User
 from fake_data.posts import post_data
 
 # Will set up db later, for now we will store all Users in this users list
@@ -38,20 +39,13 @@ def create_user():
     password = data.get('password')
 
     # check to see if any current users already have that username and/or email
-    for user in users: 
+    check_users = db.session.execute(db.select(User).where( (User.username == username) | (User.email == email) )).scalars().all()
+    for user in users:
         if user['username'] == username or user['email'] == email:
-            return {'error': 'A user with that username and/or email already exists'}, 400
+            return {'error': "A user with that username and/or email already exists"}, 400
         
-    # create a new instance od a iser with the data from the request
-    new_user = {
-        "id": len(users) + 1,
-        "firstName": first_name,
-        "lastName": last_name,
-        "username": username,
-        "email": email,
-        "password": password
-    }
-    users.append(new_user)
+    # create a new instance of a user with the data from the request
+    new_user = User(first_name=first_name, last_name=last_name,  username=username, email=email, password=password)
 
     return new_user, 201
 
