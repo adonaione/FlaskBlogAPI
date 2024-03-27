@@ -37,23 +37,25 @@ def create_user():
 
     # check to see if any current users already have that username and/or email
     check_users = db.session.execute(db.select(User).where( (User.username == username) | (User.email == email) )).scalars().all()
-    for user in users:
-        if user['username'] == username or user['email'] == email:
-            return {'error': "A user with that username and/or email already exists"}, 400
+    if check_users:
+        return {'error': "A user with that username and/or email already exists"}, 400
         
     # create a new instance of a user with the data from the request
     new_user = User(first_name=first_name, last_name=last_name,  username=username, email=email, password=password)
 
-    return new_user, 201
-
+    return new_user.to_dict(), 201
 
 # Post Endpoints
 
 # Get All Posts
 @app.route('/posts')
 def get_posts():
-    # Get the posts from storage (fake data -> tomorrow will be db)
-    posts = db.session.execute(db.select(Post)).scalars().all() 
+    select_stmt = db.select(Post)
+    search = request.args.get('search')
+    if search:
+        select_stmt = select_stmt.where(Post.title.ilike(f"%{search}%"))
+    # Get the posts from the database
+    posts = db.session.execute(select_stmt).scalars().all()
     return [p.to_dict() for p in posts]
 
 
@@ -65,8 +67,7 @@ def get_post(post_id):
     if post:
         return post.to_dict()
     else:
-    # If we loop through all of the posts without returning, the post with that ID does not exist
-        return {'error': f"Post with an ID of {post_id} does not exist"}, 404
+        return {'error': f"Post with an ID of {post_id} does not exist"}, 404 # If we loop through all of the posts without returning, the post with that ID does not exist
 
 
 # Create a Post
