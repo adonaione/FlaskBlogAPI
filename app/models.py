@@ -54,6 +54,7 @@ class User(db.Model):
         return {"token": self.token, "tokenExpiration": self.token_expiration}
     
 
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
@@ -82,3 +83,11 @@ class Post(db.Model):
             "dateCreated": self.date_created,
             "author": self.author.to_dict()
         }
+    
+    def update(self, **kwargs):
+        allowed_fields = {'title', 'body'}
+
+        for key, value in kwargs.items():
+            if key in allowed_fields:
+                setattr(self, key, value)
+        self.save()
