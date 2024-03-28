@@ -3,8 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
 
-
-
 # Create an instance of Flask called app which will be the central object
 app = Flask(__name__)
 #set the configuration for the app
