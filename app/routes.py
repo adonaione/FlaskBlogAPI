@@ -49,11 +49,14 @@ def create_user():
 @basic_auth.login_required
 def get_token():
     user = basic_auth.current_user()
-    token = user.get_token()
-    return {
-        'token': token,
-        'tokenExpiration': user.token_expiration
-    }
+    return user.get_token()
+
+
+@app.route('/users/me')
+@token_auth.login_required
+def get_me():
+    user = token_auth.current_user()
+    return user.to_dict()
 
 # Get a user
 @app.route('/users/<int:user_id>')
